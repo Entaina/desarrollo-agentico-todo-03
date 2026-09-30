@@ -21,7 +21,12 @@ Construye el contexto inicial necesario para trabajar en este repositorio. No mo
    - `templates/tasks/index.plush.html`;
    - `.github/workflows/ci.yaml`.
 3. Localiza los tests que cubren las capas anteriores y revisa los que resulten relevantes.
-4. Si `$ARGUMENTS` describe una zona o tarea concreta, profundiza únicamente en los archivos relacionados.
+4. Adapta la exploración al modo indicado en `$ARGUMENTS`:
+   - `exploración`: prioriza el mapa del sistema, sus límites, incógnitas y puntos de extensión;
+   - `optimización`: localiza rutas críticas, señales medibles y posibles cuellos de botella sin asumir que ya están demostrados;
+   - `diseño de producto`: reconstruye los flujos de usuario, el comportamiento observable y las decisiones de dominio;
+   - cualquier otro argumento: úsalo como foco concreto y profundiza solo en los archivos relacionados.
+5. Si no se indica un modo, construye el contexto general descrito arriba.
 
 ## Resultado
 
