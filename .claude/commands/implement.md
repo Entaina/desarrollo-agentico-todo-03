@@ -1,0 +1,20 @@
+---
+description: Ejecuta fielmente un plan aprobado, prueba el cambio y no rediseña la solución
+allowed-tools: Bash, Read, Glob, Grep, Write, Edit
+---
+
+# Implementa un plan aprobado
+
+`$ARGUMENTS` debe identificar un plan existente, normalmente en `plans/`. Ese plan aprobado es la especificación de esta ejecución.
+
+1. Lee el plan completo y comprueba `git status --short --branch` antes de editar.
+2. Verifica que las rutas, el estado inicial y los supuestos esenciales todavía coinciden con el repositorio.
+3. Ejecuta los pasos en el orden indicado, respetando su alcance, exclusiones y decisiones.
+4. Añade o actualiza únicamente los tests exigidos por el plan y ejecuta sus comandos de validación.
+5. Revisa `git diff --check`, `git diff` y `git status --short` al finalizar.
+
+No rediseñes la solución, no amplíes el alcance y no crees ni reescribas un plan. Puedes resolver detalles mecánicos menores cuando exista un patrón inequívoco en el repositorio. Si el plan está obsoleto, contiene una ambigüedad relevante, requiere secretos o no puede ejecutarse con seguridad, detente y explica el bloqueo en vez de elegir una solución nueva.
+
+No hagas commit, push ni merge, y no abras un pull request. No incluyas cambios previos ajenos, no modifiques archivos fuera del alcance aprobado y no desactives tests para obtener una ejecución verde.
+
+En el reporte final enumera los archivos cambiados, los tests añadidos o actualizados, cada comando ejecutado con su resultado y cualquier desviación o riesgo residual.
