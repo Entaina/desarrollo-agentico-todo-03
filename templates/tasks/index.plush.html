@@ -33,7 +33,7 @@
           <span class="task-status">Completada</span>
         <% } %>
         <div class="task-actions">
-          <form action="/tasks/<%= t.ID %>/toggle" method="POST">
+          <form action="/tasks/<%= t.ID %>/toggle" method="POST" data-task-toggle>
             <input type="hidden" name="authenticity_token" value="<%= authenticity_token %>">
             <input type="hidden" name="_method" value="PUT">
             <%= if (t.Completed) { %>
