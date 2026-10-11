@@ -83,7 +83,8 @@ h1 {
   margin-bottom: var(--space-l);
 }
 
-.new-task label {
+.new-task label,
+.edit-task label {
   display: block;
   font-weight: 600;
   margin-bottom: var(--space-s);
@@ -94,7 +95,8 @@ h1 {
   gap: var(--space-s);
 }
 
-.new-task input[type="text"] {
+.new-task input[type="text"],
+.edit-task input[type="text"] {
   flex: 1;
   padding: var(--space-s) var(--space-m);
   font-size: var(--font-size-base);
@@ -112,10 +114,33 @@ h1 {
   margin-top: var(--space-s);
 }
 
+/* Formulario de edición */
+.edit-task {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-m);
+}
+
+.edit-task input[type="text"] {
+  width: 100%;
+}
+
+.edit-task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+}
+
 /* Botones */
 .button {
+  display: inline-block;
+  text-decoration: none;
+  white-space: nowrap;
   padding: var(--space-s) var(--space-m);
   font-size: var(--font-size-base);
+  line-height: inherit;
   font-family: inherit;
   color: var(--color-text);
   background-color: var(--color-surface);

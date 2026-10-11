@@ -2,6 +2,7 @@ package actions
 
 import (
 	"net/url"
+	"strings"
 
 	"todo/models"
 
@@ -105,5 +106,134 @@ func (as *ActionSuite) Test_TasksDestroy() {
 func (as *ActionSuite) Test_TasksDestroy_NotFound() {
 	id := uuid.Must(uuid.NewV4())
 	res := as.HTML("/tasks/%s", id).Delete()
+	as.Equal(404, res.Code)
+}
+
+func (as *ActionSuite) taskForEditing(completed bool) *models.Task {
+	task := &models.Task{Title: "Título original", Completed: completed}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+	as.NoError(as.DB.Reload(task))
+	return task
+}
+
+func (as *ActionSuite) Test_TasksIndex_EditLink() {
+	task := as.taskForEditing(false)
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "/tasks/"+task.ID.String()+"/edit")
+	as.Contains(res.Body.String(), "Editar tarea: Título original")
+}
+
+func (as *ActionSuite) Test_TasksEdit_PrefillsTitle() {
+	task := as.taskForEditing(true)
+	res := as.HTML("/tasks/%s/edit", task.ID).Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), `value="Título original"`)
+	as.Contains(res.Body.String(), `value="PUT"`)
+	as.Contains(res.Body.String(), "Guardar cambios")
+	as.Contains(res.Body.String(), "Cancelar")
+	as.NoError(as.DB.Reload(task))
+	as.True(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksEdit_NotFound() {
+	res := as.HTML("/tasks/%s/edit", uuid.Must(uuid.NewV4())).Get()
+	as.Equal(404, res.Code)
+}
+
+func (as *ActionSuite) Test_TasksEdit_InvalidID() {
+	res := as.HTML("/tasks/no-es-un-uuid/edit").Get()
+	as.Equal(404, res.Code)
+}
+
+func (as *ActionSuite) Test_TasksEdit_EscapesTitle() {
+	task := &models.Task{Title: `<img src=x onerror="alert(1)">`}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+	res := as.HTML("/tasks/%s/edit", task.ID).Get()
+	as.Equal(200, res.Code)
+	as.NotContains(res.Body.String(), `<img src=x`)
+	as.Contains(res.Body.String(), "&lt;img")
+}
+
+func (as *ActionSuite) Test_TasksUpdate_PersistsTitleOnly() {
+	task := as.taskForEditing(true)
+	id, createdAt, updatedAt := task.ID, task.CreatedAt, task.UpdatedAt
+	res := as.HTML("/tasks/%s", id).Put(url.Values{
+		"title": {"  Título actualizado  "}, "completed": {"false"},
+		"id": {uuid.Must(uuid.NewV4()).String()}, "created_at": {"2000-01-01T00:00:00Z"},
+	})
+	as.Equal(303, res.Code)
+	as.Equal("/", res.Header().Get("Location"))
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título actualizado", task.Title)
+	as.Equal(id, task.ID)
+	as.True(task.Completed)
+	as.True(task.CreatedAt.Equal(createdAt))
+	as.False(task.UpdatedAt.Before(updatedAt))
+	count, err := as.DB.Count(&models.Task{})
+	as.NoError(err)
+	as.Equal(1, count)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_PendingTaskRemainsPending() {
+	task := as.taskForEditing(false)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Nuevo título"}, "completed": {"true"}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Nuevo título", task.Title)
+	as.False(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_EmptyTitle() {
+	task := as.taskForEditing(false)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {""}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "El título es obligatorio.")
+	as.Contains(res.Body.String(), `aria-describedby="title-error"`)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título original", task.Title)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_OnlySpaces() {
+	task := as.taskForEditing(true)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"   "}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "El título es obligatorio.")
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título original", task.Title)
+	as.True(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_TitleTooLong() {
+	task := as.taskForEditing(false)
+	title := strings.Repeat("á", models.TitleMaxLength+1)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {title}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "El título no puede superar los 200 caracteres.")
+	as.Contains(res.Body.String(), title)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título original", task.Title)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_TitleAtLimit() {
+	task := as.taskForEditing(false)
+	title := strings.Repeat("á", models.TitleMaxLength)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {title}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal(title, task.Title)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_NotFound() {
+	res := as.HTML("/tasks/%s", uuid.Must(uuid.NewV4())).Put(url.Values{"title": {"Título nuevo"}})
+	as.Equal(404, res.Code)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_InvalidID() {
+	res := as.HTML("/tasks/no-es-un-uuid").Put(url.Values{"title": {"Título nuevo"}})
 	as.Equal(404, res.Code)
 }

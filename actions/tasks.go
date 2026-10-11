@@ -57,6 +57,51 @@ func TasksCreate(c buffalo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/")
 }
 
+// TasksEdit muestra el formulario de edición de una tarea existente.
+func TasksEdit(c buffalo.Context) error {
+	tx := c.Value("tx").(*pop.Connection)
+
+	task := &models.Task{}
+	if err := tx.Find(task, c.Param("task_id")); err != nil {
+		return c.Error(http.StatusNotFound, err)
+	}
+
+	c.Set("task", task)
+	c.Set("errors", validate.NewErrors())
+	return c.Render(http.StatusOK, r.HTML("tasks/edit.plush.html"))
+}
+
+// TasksUpdate actualiza solo el título, conservando los demás datos de la tarea.
+func TasksUpdate(c buffalo.Context) error {
+	tx := c.Value("tx").(*pop.Connection)
+
+	task := &models.Task{}
+	if err := tx.Find(task, c.Param("task_id")); err != nil {
+		return c.Error(http.StatusNotFound, err)
+	}
+
+	input := struct {
+		Title string `form:"title" json:"title"`
+	}{}
+	if err := c.Bind(&input); err != nil {
+		return err
+	}
+	task.Title = strings.TrimSpace(input.Title)
+
+	verrs, err := tx.ValidateAndUpdate(task)
+	if err != nil {
+		return err
+	}
+	if verrs.HasAny() {
+		c.Set("task", task)
+		c.Set("errors", verrs)
+		return c.Render(http.StatusUnprocessableEntity, r.HTML("tasks/edit.plush.html"))
+	}
+
+	c.Flash().Add("success", "Tarea actualizada.")
+	return c.Redirect(http.StatusSeeOther, "/")
+}
+
 // TasksToggle alterna una tarea entre completada y pendiente.
 func TasksToggle(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
