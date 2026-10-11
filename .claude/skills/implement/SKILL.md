@@ -1,4 +1,5 @@
 ---
+name: implement
 description: Ejecuta fielmente un plan aprobado, prueba el cambio y no rediseña la solución
 allowed-tools: Bash, Read, Glob, Grep, Write, Edit
 ---

@@ -1,4 +1,5 @@
 ---
+name: feature
 description: Investiga una funcionalidad y escribe un plan autocontenido en plans/
 allowed-tools: Bash, Read, Glob, Grep, Write
 ---

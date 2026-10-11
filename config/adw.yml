@@ -1,0 +1,8 @@
+# Repositorio cuyas issues debe consultar el trigger: OWNER/REPO.
+repo: ""
+label: adw
+interval_seconds: 20
+
+# Invoca el workflow que hayas creado. {{issue_url}} recibe cada issue.
+prompt: >-
+  /adw {{issue_url}} --remote origin --base main

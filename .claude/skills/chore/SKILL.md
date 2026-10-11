@@ -1,4 +1,5 @@
 ---
+name: chore
 description: Investiga una tarea de mantenimiento y escribe un plan autocontenido en plans/
 allowed-tools: Bash, Read, Glob, Grep, Write
 ---
