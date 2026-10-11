@@ -16,7 +16,11 @@ document.addEventListener("submit", function (event) {
   var button = form.querySelector("button");
   var status = task.querySelector(".task-status");
 
-  button.textContent = completed ? "Reabrir" : "Completar";
+  var label = completed ? "Reabrir" : "Completar";
+  button.querySelector(".toggle-label").textContent = label;
+  button.setAttribute("aria-pressed", String(completed));
+  button.setAttribute("aria-label", label + " tarea: " + task.querySelector(".task-title").textContent);
+  button.setAttribute("title", label + " tarea");
 
   if (completed && !status) {
     status = document.createElement("span");
