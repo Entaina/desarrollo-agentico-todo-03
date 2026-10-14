@@ -2,6 +2,7 @@ package actions
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"todo/models"
@@ -35,6 +36,7 @@ func TasksCreate(c buffalo.Context) error {
 		return err
 	}
 	task.Title = strings.TrimSpace(task.Title)
+	setPriority(task, c.Param("priority"))
 
 	verrs, err := tx.ValidateAndCreate(task)
 	if err != nil {
@@ -57,6 +59,20 @@ func TasksCreate(c buffalo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/")
 }
 
+// setPriority asigna la prioridad enviada en el formulario. Si viene vacía conserva
+// la actual; si no es un número, deja un valor fuera de rango para que la
+// validación del modelo la rechace.
+func setPriority(task *models.Task, value string) {
+	if value == "" {
+		return
+	}
+	priority, err := strconv.Atoi(value)
+	if err != nil {
+		priority = models.PriorityHigh + 1
+	}
+	task.Priority = priority
+}
+
 // TasksEdit muestra el formulario de edición de una tarea existente.
 func TasksEdit(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
@@ -71,7 +87,7 @@ func TasksEdit(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.HTML("tasks/edit.plush.html"))
 }
 
-// TasksUpdate actualiza solo el título, conservando los demás datos de la tarea.
+// TasksUpdate actualiza el título y, si se envía, la prioridad, conservando los demás datos de la tarea.
 func TasksUpdate(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 
@@ -81,12 +97,14 @@ func TasksUpdate(c buffalo.Context) error {
 	}
 
 	input := struct {
-		Title string `form:"title" json:"title"`
+		Title    string `form:"title" json:"title"`
+		Priority string `form:"priority" json:"priority"`
 	}{}
 	if err := c.Bind(&input); err != nil {
 		return err
 	}
 	task.Title = strings.TrimSpace(input.Title)
+	setPriority(task, input.Priority)
 
 	verrs, err := tx.ValidateAndUpdate(task)
 	if err != nil {

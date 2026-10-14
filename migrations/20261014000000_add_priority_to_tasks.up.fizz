@@ -1,0 +1,1 @@
+add_column("tasks", "priority", "integer", {"default": 0})
