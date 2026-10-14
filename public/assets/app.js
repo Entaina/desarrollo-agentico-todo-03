@@ -1,20 +1,9 @@
-// Pide confirmación antes de enviar formularios marcados con data-confirm.
-document.addEventListener("submit", function (event) {
-  var form = event.target;
-  if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
-    event.preventDefault();
-  }
-
-  if (!form.matches("[data-task-toggle]")) {
-    return;
-  }
-
-  event.preventDefault();
-
-  var task = form.closest(".task");
-  var completed = task.classList.toggle("task-completed");
+// Muestra una tarea como completada o pendiente.
+function setCompleted(task, form, completed) {
   var button = form.querySelector("button");
   var status = task.querySelector(".task-status");
+
+  task.classList.toggle("task-completed", completed);
 
   var label = completed ? "Reabrir" : "Completar";
   button.querySelector(".toggle-label").textContent = label;
@@ -30,6 +19,42 @@ document.addEventListener("submit", function (event) {
   } else if (!completed && status) {
     status.remove();
   }
+}
 
-  fetch(form.action);
+// Pide confirmación antes de enviar formularios marcados con data-confirm.
+document.addEventListener("submit", function (event) {
+  var form = event.target;
+  if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
+    event.preventDefault();
+  }
+
+  if (!form.matches("[data-task-toggle]")) {
+    return;
+  }
+
+  event.preventDefault();
+
+  var task = form.closest(".task");
+  var button = form.querySelector("button");
+  var completed = !task.classList.contains("task-completed");
+
+  setCompleted(task, form, completed);
+  button.disabled = true;
+
+  // Envía el formulario real (POST con _method=PUT y authenticity_token);
+  // si el servidor no lo guarda, la tarea vuelve a su estado anterior.
+  fetch(form.action, {
+    method: "POST",
+    body: new FormData(form),
+    credentials: "same-origin",
+    headers: { Accept: "text/html" }
+  }).then(function (response) {
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+  }).catch(function () {
+    setCompleted(task, form, !completed);
+  }).then(function () {
+    button.disabled = false;
+  });
 });
