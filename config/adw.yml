@@ -1,8 +1,10 @@
 # Repositorio cuyas issues debe consultar el trigger: OWNER/REPO.
-repo: ""
+repo: bortizmartinez/desarrollo-agentico-todo-03
 label: adw
 interval_seconds: 20
 
 # Invoca el workflow que hayas creado. {{issue_url}} recibe cada issue.
+# /dev-flow clasifica la issue, la implementa, la valida, abre un PR contra main,
+# comenta en la issue y le quita la etiqueta para que no se repita.
 prompt: >-
-  /adw {{issue_url}} --remote origin --base main
+  /dev-flow {{issue_url}} --auto --pr
