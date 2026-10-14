@@ -30,6 +30,7 @@
             </button>
           </form>
           <span class="task-title"><%= t.Title %></span>
+          <span class="task-priority task-priority-<%= priority_class(t.Priority) %>">Prioridad: <%= priority_label(t.Priority) %></span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
@@ -68,11 +69,26 @@
       placeholder="Añadir una tarea…"
       maxlength="200"
       autocomplete="off"
-      <%= if (errors.HasAny()) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
+      <%= if (len(errors.Get("title")) > 0) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
     >
+    <label for="task-priority" class="sr-only">Prioridad</label>
+    <select
+      id="task-priority"
+      name="priority"
+      <%= if (len(errors.Get("priority")) > 0) { %>aria-invalid="true" aria-describedby="priority-error"<% } %>
+    >
+      <%= for (p) in priorities() { %>
+        <option value="<%= p %>" <%= if (task.Priority == p || (task.Priority == "" && p == "medium")) { %>selected<% } %>><%= priority_label(p) %></option>
+      <% } %>
+    </select>
     <button type="submit" class="button button-primary">Añadir</button>
   </div>
-  <%= if (errors.HasAny()) { %>
+  <%= if (len(errors.Get("priority")) > 0) { %>
+    <p id="priority-error" class="field-error" role="alert">
+      <%= for (msg) in errors.Get("priority") { %><%= msg %><% } %>
+    </p>
+  <% } %>
+  <%= if (len(errors.Get("title")) > 0) { %>
     <p id="title-error" class="field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
     </p>

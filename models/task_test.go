@@ -69,3 +69,40 @@ func (ms *ModelSuite) Test_Task_Toggle_Persists() {
 	ms.NoError(ms.DB.Find(reloaded, task.ID))
 	ms.True(reloaded.Completed)
 }
+
+func (ms *ModelSuite) Test_Task_Priority_DefaultsToMedium() {
+	task := &Task{Title: "Sin prioridad"}
+
+	verrs, err := ms.DB.ValidateAndCreate(task)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+
+	ms.NoError(ms.DB.Reload(task))
+	ms.Equal(PriorityMedium, task.Priority)
+}
+
+func (ms *ModelSuite) Test_Task_Priority_ValidValues() {
+	for _, p := range Priorities {
+		task := &Task{Title: "Con prioridad " + p, Priority: p}
+
+		verrs, err := ms.DB.ValidateAndCreate(task)
+		ms.NoError(err)
+		ms.False(verrs.HasAny())
+
+		ms.NoError(ms.DB.Reload(task))
+		ms.Equal(p, task.Priority)
+	}
+}
+
+func (ms *ModelSuite) Test_Task_Priority_Invalid() {
+	task := &Task{Title: "Prioridad inválida", Priority: "urgente"}
+
+	verrs, err := ms.DB.ValidateAndCreate(task)
+	ms.NoError(err)
+	ms.True(verrs.HasAny())
+	ms.Contains(verrs.Get("priority"), "La prioridad no es válida.")
+
+	count, err := ms.DB.Count(&Task{})
+	ms.NoError(err)
+	ms.Equal(0, count)
+}
