@@ -30,6 +30,10 @@
             </button>
           </form>
           <span class="task-title"><%= t.Title %></span>
+          <span class="task-priority priority-<%= t.PriorityKey() %>" title="Prioridad <%= t.PriorityLabel() %>">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5" /></svg>
+            <span class="sr-only">Prioridad <%= t.PriorityLabel() %></span>
+          </span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
@@ -68,13 +72,29 @@
       placeholder="Añadir una tarea…"
       maxlength="200"
       autocomplete="off"
-      <%= if (errors.HasAny()) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
+      <%= if (len(errors.Get("title")) > 0) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
     >
+    <label for="task-priority" class="sr-only">Prioridad</label>
+    <select
+      id="task-priority"
+      name="priority"
+      class="priority-select"
+      <%= if (len(errors.Get("priority")) > 0) { %>aria-invalid="true" aria-describedby="priority-error"<% } %>
+    >
+      <option value="1"<%= if (task.PriorityKey() == "high") { %> selected<% } %>>Alta</option>
+      <option value="0"<%= if (task.PriorityKey() == "medium") { %> selected<% } %>>Media</option>
+      <option value="-1"<%= if (task.PriorityKey() == "low") { %> selected<% } %>>Baja</option>
+    </select>
     <button type="submit" class="button button-primary">Añadir</button>
   </div>
-  <%= if (errors.HasAny()) { %>
+  <%= if (len(errors.Get("title")) > 0) { %>
     <p id="title-error" class="field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
+    </p>
+  <% } %>
+  <%= if (len(errors.Get("priority")) > 0) { %>
+    <p id="priority-error" class="field-error" role="alert">
+      <%= for (msg) in errors.Get("priority") { %><%= msg %><% } %>
     </p>
   <% } %>
 </form>

@@ -69,3 +69,52 @@ func (ms *ModelSuite) Test_Task_Toggle_Persists() {
 	ms.NoError(ms.DB.Find(reloaded, task.ID))
 	ms.True(reloaded.Completed)
 }
+
+func (ms *ModelSuite) Test_Task_Priority_DefaultsToMedium() {
+	task := &Task{Title: "Sin prioridad indicada"}
+	verrs, err := ms.DB.ValidateAndCreate(task)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+
+	ms.NoError(ms.DB.Reload(task))
+	ms.Equal(PriorityMedium, task.Priority)
+}
+
+func (ms *ModelSuite) Test_Task_Priority_ValidValues() {
+	for _, priority := range []int{PriorityLow, PriorityMedium, PriorityHigh} {
+		task := &Task{Title: "Tarea", Priority: priority}
+		verrs, err := task.Validate(ms.DB)
+		ms.NoError(err)
+		ms.False(verrs.HasAny(), "prioridad %d", priority)
+	}
+}
+
+func (ms *ModelSuite) Test_Task_Priority_OutOfRange_Invalid() {
+	for _, priority := range []int{PriorityHigh + 1, PriorityLow - 1} {
+		task := &Task{Title: "Tarea", Priority: priority}
+		verrs, err := ms.DB.ValidateAndCreate(task)
+		ms.NoError(err)
+		ms.Contains(verrs.Get("priority"), "La prioridad no es válida.")
+	}
+
+	count, err := ms.DB.Count(&Task{})
+	ms.NoError(err)
+	ms.Equal(0, count)
+}
+
+func (ms *ModelSuite) Test_Task_PriorityKeyAndLabel() {
+	cases := []struct {
+		priority int
+		key      string
+		label    string
+	}{
+		{PriorityHigh, "high", "alta"},
+		{PriorityMedium, "medium", "media"},
+		{PriorityLow, "low", "baja"},
+	}
+	for _, c := range cases {
+		task := Task{Priority: c.priority}
+		ms.Equal(c.key, task.PriorityKey())
+		ms.Equal(c.label, task.PriorityLabel())
+	}
+}
