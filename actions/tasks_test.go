@@ -78,6 +78,20 @@ func (as *ActionSuite) Test_TasksToggle_CompletesAndReopens() {
 	as.False(task.Completed)
 }
 
+func (as *ActionSuite) Test_TasksToggle_FormMethodOverride() {
+	task := &models.Task{Title: "Completada desde la lista"}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	// El JavaScript de la lista envía el formulario como POST con _method=PUT.
+	res := as.HTML("/tasks/%s/toggle", task.ID).Post(url.Values{"_method": {"PUT"}})
+	as.Equal(303, res.Code)
+
+	as.NoError(as.DB.Reload(task))
+	as.True(task.Completed)
+}
+
 func (as *ActionSuite) Test_TasksToggle_NotFound() {
 	id := uuid.Must(uuid.NewV4())
 	res := as.HTML("/tasks/%s/toggle", id).Put(url.Values{})
