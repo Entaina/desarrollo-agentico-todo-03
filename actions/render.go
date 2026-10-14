@@ -1,6 +1,9 @@
 package actions
 
 import (
+	"slices"
+
+	"todo/models"
 	"todo/public"
 	"todo/templates"
 
@@ -22,10 +25,22 @@ func init() {
 
 		// Add template helpers here:
 		Helpers: render.Helpers{
+			"priorities":     func() []string { return models.Priorities },
+			"priority_label": models.PriorityLabel,
+			"priority_class": priorityClass,
+
 			// for non-bootstrap form helpers uncomment the lines
 			// below and import "github.com/gobuffalo/helpers/forms"
 			// forms.FormKey:     forms.Form,
 			// forms.FormForKey:  forms.FormFor,
 		},
 	})
+}
+
+// priorityClass devuelve un sufijo de clase CSS seguro para una prioridad.
+func priorityClass(p string) string {
+	if slices.Contains(models.Priorities, p) {
+		return p
+	}
+	return "none"
 }

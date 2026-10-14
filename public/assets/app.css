@@ -121,7 +121,7 @@ h1 {
 
 .task {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
   align-items: start;
   column-gap: 0.3rem;
   min-height: 61px;
@@ -259,6 +259,55 @@ input[type="text"] {
 
 .new-task-row input {
   flex: 1;
+}
+
+select {
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  color: var(--color-text);
+  background: #ffffff;
+  border: 1px solid #92928a;
+  border-radius: 6px;
+}
+
+select[aria-invalid="true"] {
+  border-color: var(--color-danger);
+  background: #fff9f7;
+}
+
+.edit-task select {
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.task-priority {
+  align-self: center;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-muted);
+}
+
+.task-priority-high {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: #fcf0ec;
+}
+
+.task-priority-medium {
+  color: #6b5200;
+  border-color: #d9c27a;
+  background: #fbf5dc;
+}
+
+.task-priority-low {
+  color: #1f5c3a;
+  border-color: #a9d3b9;
+  background: #eef7f1;
 }
 
 input::placeholder {
@@ -434,7 +483,7 @@ input:focus-visible {
   }
 
   .task {
-    grid-template-columns: 36px minmax(0, 1fr) auto;
+    grid-template-columns: 36px minmax(0, 1fr) auto auto;
   }
 
   .task-toggle-button,
@@ -466,6 +515,10 @@ input:focus-visible {
 
   .new-task-row input {
     flex-basis: calc(100% - 44px);
+  }
+
+  .new-task-row select {
+    flex: 1;
   }
 
   .new-task-row .button {
