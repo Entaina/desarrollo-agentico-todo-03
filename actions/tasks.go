@@ -21,7 +21,8 @@ func TasksIndex(c buffalo.Context) error {
 	}
 
 	c.Set("tasks", tasks)
-	c.Set("task", &models.Task{})
+	c.Set("task", &models.Task{Priority: models.PriorityMedium})
+	c.Set("priorities", models.Priorities)
 	c.Set("errors", validate.NewErrors())
 	return c.Render(http.StatusOK, r.HTML("tasks/index.plush.html"))
 }
@@ -49,6 +50,7 @@ func TasksCreate(c buffalo.Context) error {
 
 		c.Set("tasks", tasks)
 		c.Set("task", task)
+		c.Set("priorities", models.Priorities)
 		c.Set("errors", verrs)
 		return c.Render(http.StatusUnprocessableEntity, r.HTML("tasks/index.plush.html"))
 	}
@@ -72,6 +74,7 @@ func TasksEdit(c buffalo.Context) error {
 }
 
 // TasksUpdate actualiza solo el título, conservando los demás datos de la tarea.
+// La prioridad se elige al crear la tarea y no se modifica al editarla.
 func TasksUpdate(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 

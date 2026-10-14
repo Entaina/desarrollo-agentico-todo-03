@@ -129,12 +129,60 @@ h1 {
   border-bottom: 1px solid var(--color-border);
 }
 
-.task-title {
+.task-body {
   align-self: center;
   min-width: 0;
-  padding: 0.65rem 0;
+  padding: 0.45rem 0;
+}
+
+.task-title {
+  display: block;
   overflow-wrap: anywhere;
   line-height: 1.55;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.priority {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.priority-urgente {
+  color: #8f1f15;
+  background: #fde3dd;
+  border-color: #f4c3b8;
+}
+
+.priority-alta {
+  color: #7a4300;
+  background: #fdf0d9;
+  border-color: #f1d7a8;
+}
+
+.priority-media {
+  color: #234a86;
+  background: #e9f0fb;
+  border-color: #cddcf3;
+}
+
+.priority-baja {
+  color: #4f4f4a;
+  background: #f2f2ee;
+  border-color: #e2e2dc;
 }
 
 .task-toggle-button,
@@ -261,11 +309,42 @@ input[type="text"] {
   flex: 1;
 }
 
+.new-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  margin-top: 0.6rem;
+  padding-left: calc(44px + 0.6rem);
+}
+
+.new-task-meta select {
+  width: auto;
+}
+
+.field-label {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  color: var(--color-text);
+  background: #ffffff;
+  border: 1px solid #92928a;
+  border-radius: 6px;
+}
+
 input::placeholder {
   color: var(--color-muted);
 }
 
-input[aria-invalid="true"] {
+input[aria-invalid="true"],
+select[aria-invalid="true"] {
   border-color: var(--color-danger);
   background: #fff9f7;
 }
@@ -307,7 +386,8 @@ input[aria-invalid="true"] {
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
@@ -448,6 +528,10 @@ input:focus-visible {
 
   .new-task-row {
     gap: 0.4rem;
+  }
+
+  .new-task-meta {
+    padding-left: 0;
   }
 
   .add-mark {

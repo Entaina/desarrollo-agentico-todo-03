@@ -237,3 +237,81 @@ func (as *ActionSuite) Test_TasksUpdate_InvalidID() {
 	res := as.HTML("/tasks/no-es-un-uuid").Put(url.Values{"title": {"Título nuevo"}})
 	as.Equal(404, res.Code)
 }
+
+func (as *ActionSuite) Test_TasksCreate_WithPriority() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Revisar contrato"}, "priority": {models.PriorityUrgent}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.Equal("Revisar contrato", task.Title)
+	as.Equal(models.PriorityUrgent, task.Priority)
+}
+
+func (as *ActionSuite) Test_TasksCreate_WithoutPriority_DefaultsToMedium() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Sin prioridad"}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.Equal(models.PriorityMedium, task.Priority)
+}
+
+func (as *ActionSuite) Test_TasksCreate_InvalidPriority() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Tarea"}, "priority": {"altísima"}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "La prioridad no es válida.")
+	as.Contains(res.Body.String(), `aria-describedby="priority-error"`)
+
+	count, err := as.DB.Count(&models.Task{})
+	as.NoError(err)
+	as.Equal(0, count)
+}
+
+func (as *ActionSuite) Test_TasksIndex_ShowsPriority() {
+	task := &models.Task{Title: "Llamar al cliente", Priority: models.PriorityHigh}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	body := res.Body.String()
+	as.Contains(body, `class="priority priority-alta"`)
+	as.Contains(body, `<option value="media" selected>Media</option>`)
+	as.NotContains(body, `name="assignee"`)
+}
+
+func (as *ActionSuite) Test_TasksEdit_HasNoPrioritySelector() {
+	task := &models.Task{Title: "Con prioridad", Priority: models.PriorityLow}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/tasks/%s/edit", task.ID).Get()
+	as.Equal(200, res.Code)
+	as.NotContains(res.Body.String(), `name="priority"`)
+	as.NotContains(res.Body.String(), `name="assignee"`)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_IgnoresPriority() {
+	task := &models.Task{Title: "Urgente", Priority: models.PriorityUrgent}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Urgente revisado"}, "priority": {models.PriorityLow}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Urgente revisado", task.Title)
+	as.Equal(models.PriorityUrgent, task.Priority)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_InvalidPriorityIsIgnored() {
+	task := as.taskForEditing(false)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Nuevo"}, "priority": {"altísima"}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Nuevo", task.Title)
+	as.Equal(models.PriorityMedium, task.Priority)
+}
